@@ -22,3 +22,11 @@ func SetupProdLogger() {
 		},
 	})))
 }
+
+func SetupLoggerByEnv(variableName string, expected string) {
+	if os.Getenv(variableName) == expected {
+		SetupProdLogger()
+	} else {
+		SetupDevLogger()
+	}
+}
