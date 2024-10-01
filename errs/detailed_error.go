@@ -26,6 +26,28 @@ type Details struct {
 	FrontendErrorCode    string
 }
 
+func New(details Details) *DetailedError {
+	if details.Message == "" {
+		details.Message = "no error details provided"
+	}
+	if details.Values == nil {
+		details.Values = make(map[string]any)
+	}
+	if details.FrontendStatusCode == 0 {
+		details.FrontendStatusCode = http.StatusInternalServerError
+	}
+	if details.FrontendErrorMessage == "" {
+		details.FrontendErrorMessage = DefaultErrorMessage
+	}
+	if details.FrontendErrorCode == "" {
+		details.FrontendErrorCode = DefaultErrorCode
+	}
+
+	return &DetailedError{
+		details: details,
+	}
+}
+
 func Wrap(err error, details Details) *DetailedError {
 	if err != nil {
 		return nil
