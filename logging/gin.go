@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/MatthiasSchild/supervise/errs"
 )
 
 func DevGinLogger(c *gin.Context) {
@@ -22,17 +24,34 @@ func DevGinLogger(c *gin.Context) {
 		c.Request.URL.String(),
 	)
 
-	slog.Info(
-		msg,
-		"access", accessCounter,
-		"httpRequest", map[string]any{
-			"requestMethod": c.Request.Method,
-			"requestUrl":    c.Request.URL.String(),
-			"remoteIp":      c.ClientIP(),
-			"status":        c.Writer.Status(),
-			"latency":       float64(time.Since(start).Microseconds()) / 1000.0,
-		},
-	)
+	errorDetails := errs.ExtractMessages(c)
+
+	if len(errorDetails) > 0 {
+		slog.Error(
+			msg,
+			"access", accessCounter,
+			"errorDetails", errorDetails,
+			"httpRequest", map[string]any{
+				"requestMethod": c.Request.Method,
+				"requestUrl":    c.Request.URL.String(),
+				"remoteIp":      c.ClientIP(),
+				"status":        c.Writer.Status(),
+				"latency":       float64(time.Since(start).Microseconds()) / 1000.0,
+			},
+		)
+	} else {
+		slog.Info(
+			msg,
+			"access", accessCounter,
+			"httpRequest", map[string]any{
+				"requestMethod": c.Request.Method,
+				"requestUrl":    c.Request.URL.String(),
+				"remoteIp":      c.ClientIP(),
+				"status":        c.Writer.Status(),
+				"latency":       float64(time.Since(start).Microseconds()) / 1000.0,
+			},
+		)
+	}
 }
 
 func ProdGinLogger(c *gin.Context) {
@@ -40,17 +59,34 @@ func ProdGinLogger(c *gin.Context) {
 	start := time.Now()
 	c.Next()
 
-	slog.Info(
-		"http request",
-		"access", accessCounter,
-		"httpRequest", map[string]any{
-			"requestMethod": c.Request.Method,
-			"requestUrl":    c.Request.URL.String(),
-			"remoteIp":      c.ClientIP(),
-			"status":        c.Writer.Status(),
-			"latency":       float64(time.Since(start).Microseconds()) / 1000.0,
-		},
-	)
+	errorDetails := errs.ExtractMessages(c)
+
+	if len(errorDetails) > 0 {
+		slog.Error(
+			"http request",
+			"access", accessCounter,
+			"errorDetails", errorDetails,
+			"httpRequest", map[string]any{
+				"requestMethod": c.Request.Method,
+				"requestUrl":    c.Request.URL.String(),
+				"remoteIp":      c.ClientIP(),
+				"status":        c.Writer.Status(),
+				"latency":       float64(time.Since(start).Microseconds()) / 1000.0,
+			},
+		)
+	} else {
+		slog.Info(
+			"http request",
+			"access", accessCounter,
+			"httpRequest", map[string]any{
+				"requestMethod": c.Request.Method,
+				"requestUrl":    c.Request.URL.String(),
+				"remoteIp":      c.ClientIP(),
+				"status":        c.Writer.Status(),
+				"latency":       float64(time.Since(start).Microseconds()) / 1000.0,
+			},
+		)
+	}
 }
 
 func GinLoggerByEnv(variableName string, expected string) gin.HandlerFunc {

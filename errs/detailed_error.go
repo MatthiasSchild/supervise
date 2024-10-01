@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -52,15 +53,23 @@ func Wrap(err error, details Details) *DetailedError {
 	}
 }
 
-func (d *DetailedError) Error() string {
+func (d DetailedError) Error() string {
 	return d.innerError.Error()
 }
 
-func (d *DetailedError) SetValue(key string, value any) {
-	d.details.Values[key] = value
+func (d DetailedError) ErrorMessages() []string {
+	var result []string
+
+	var detailedError DetailedError
+	result = append(result, detailedError.details.Message)
+	for errors.As(detailedError.innerError, &detailedError) {
+		result = append(result, detailedError.details.Message)
+	}
+
+	return result
 }
 
-func (d *DetailedError) Abort(c *gin.Context) {
+func (d DetailedError) Abort(c *gin.Context) {
 	c.Abort()
 	c.JSON(200, DetailedErrorConverter(d.details))
 	_ = c.Error(d)
