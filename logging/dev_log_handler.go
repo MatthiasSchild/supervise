@@ -6,7 +6,28 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+
+	"github.com/fatih/color"
 )
+
+var (
+	textInfo    = color.New(color.FgBlue).SprintFunc()
+	textWarning = color.New(color.FgYellow).SprintFunc()
+	textError   = color.New(color.FgRed).SprintFunc()
+)
+
+func colorizeStringByLevel(level string, input string) string {
+	switch strings.ToLower(level) {
+	case "info":
+		return textInfo(input)
+	case "warning":
+		return textWarning(input)
+	case "error":
+		return textError(input)
+	default:
+		return input
+	}
+}
 
 type devLogHandler struct {
 }
@@ -17,6 +38,8 @@ func (l *devLogHandler) Enabled(c context.Context, level slog.Level) bool {
 
 func (l *devLogHandler) Handle(c context.Context, record slog.Record) error {
 	attrs := map[string]any{}
+	level := strings.ToUpper(record.Level.String())
+	levelColorized := colorizeStringByLevel(record.Level.String(), level)
 
 	line := fmt.Sprintf(
 		"%04d-%02d-%02d %02d:%02d:%02d [%s] %s",
@@ -26,7 +49,7 @@ func (l *devLogHandler) Handle(c context.Context, record slog.Record) error {
 		record.Time.Hour(),
 		record.Time.Minute(),
 		record.Time.Second(),
-		strings.ToUpper(record.Level.String()),
+		levelColorized,
 		record.Message,
 	)
 

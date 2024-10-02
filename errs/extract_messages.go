@@ -15,9 +15,11 @@ func ExtractMessages(c *gin.Context) []string {
 		for err != nil {
 			result = append(result, err.Error())
 
-			var detailedError *DetailedError
+			var detailedError = &DetailedError{}
 			if errors.As(err, detailedError) {
 				err = detailedError.innerError
+			} else {
+				err = nil
 			}
 		}
 	}

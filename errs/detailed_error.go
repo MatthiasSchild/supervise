@@ -2,6 +2,7 @@ package errs
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,7 @@ type DetailedError struct {
 type Details struct {
 	Message              string
 	Values               map[string]any
+	FunctionName         string
 	FrontendStatusCode   int
 	FrontendErrorMessage string
 	FrontendErrorCode    string
@@ -49,7 +51,7 @@ func New(details Details) *DetailedError {
 }
 
 func Wrap(err error, details Details) *DetailedError {
-	if err != nil {
+	if err == nil {
 		return nil
 	}
 
@@ -76,7 +78,15 @@ func Wrap(err error, details Details) *DetailedError {
 }
 
 func (d DetailedError) Error() string {
-	return d.innerError.Error()
+	if d.details.FunctionName != "" {
+		return fmt.Sprintf(
+			"[%s] %s",
+			d.details.FunctionName,
+			d.details.Message,
+		)
+	}
+
+	return d.details.Message
 }
 
 func (d DetailedError) ErrorMessages() []string {
@@ -93,7 +103,7 @@ func (d DetailedError) ErrorMessages() []string {
 
 func (d DetailedError) Abort(c *gin.Context) {
 	c.Abort()
-	c.JSON(200, DetailedErrorConverter(d.details))
+	c.JSON(d.details.FrontendStatusCode, DetailedErrorConverter(d.details))
 	_ = c.Error(d)
 }
 
