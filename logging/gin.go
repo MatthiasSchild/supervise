@@ -26,7 +26,7 @@ func DevGinLogger(c *gin.Context) {
 
 	errorDetails := errs.ExtractMessages(c)
 
-	if len(errorDetails) > 0 {
+	if (len(errorDetails) > 0) || (c.Writer.Status() >= 400) {
 		slog.Error(
 			msg,
 			"access", accessCounter,
@@ -61,7 +61,7 @@ func ProdGinLogger(c *gin.Context) {
 
 	errorDetails := errs.ExtractMessages(c)
 
-	if len(errorDetails) > 0 {
+	if (len(errorDetails) > 0) || (c.Writer.Status() >= 400) {
 		slog.Error(
 			"http request",
 			"access", accessCounter,
