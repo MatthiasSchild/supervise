@@ -59,11 +59,18 @@ func ProdGinLogger(c *gin.Context) {
 	start := time.Now()
 	c.Next()
 
+	msg := fmt.Sprintf(
+		"%03d | %s %s",
+		c.Writer.Status(),
+		strings.ToUpper(c.Request.Method),
+		c.Request.URL.String(),
+	)
+
 	errorDetails := errs.ExtractMessages(c)
 
 	if (len(errorDetails) > 0) || (c.Writer.Status() >= 400) {
 		slog.Error(
-			"http request",
+			msg,
 			"access", accessCounter,
 			"errorDetails", errorDetails,
 			"httpRequest", map[string]any{
@@ -76,7 +83,7 @@ func ProdGinLogger(c *gin.Context) {
 		)
 	} else {
 		slog.Info(
-			"http request",
+			msg,
 			"access", accessCounter,
 			"httpRequest", map[string]any{
 				"requestMethod": c.Request.Method,

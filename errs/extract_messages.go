@@ -15,9 +15,18 @@ func ExtractMessages(c *gin.Context) []string {
 		for err != nil {
 			result = append(result, err.Error())
 
-			var detailedError = &DetailedError{}
-			if errors.As(err, detailedError) {
+			/*
+				Sometimes "detailedError" is not a pointer anymore.
+				I think it has to do with something internally within gin.
+				Therefore, check for a detailed error structure and pointer.
+			*/
+
+			var detailedError DetailedError
+			var detailedErrorPointer *DetailedError
+			if errors.As(err, &detailedError) {
 				err = detailedError.innerError
+			} else if errors.As(err, &detailedErrorPointer) {
+				err = detailedErrorPointer.innerError
 			} else {
 				err = nil
 			}
